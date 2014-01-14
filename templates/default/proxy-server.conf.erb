@@ -1,22 +1,27 @@
 <%
 
+pipeline = []
+
+if (node[:swift][:authmode] == "swauth" and node[:swift][:tempurl][:enabled] == true)
+  pipeline << "tempurl"
+end
+
 case @authmode
 when "keystone"
-  pipeline="authtoken keystoneauth"
+  pipeline << "authtoken"
+  pipeline << "keystoneauth"
 when "swauth"
-  pipeline="swauth"
+  pipeline << "swauth"
 end
 
-account_management=false
-if node[:swift][:authmode] == "swauth" then
-  account_management="true"
+if node[:swift][:domain_remap][:enabled]
+  pipeline << "domain_remap"
 end
 
-# need to both: 1) add tempurl before auth middleware, 2) set allow_overrides=true
-tempurl_toggle=false
-if node[:swift][:authmode] == "swauth" and node[:swift][:tempurl][:enabled] == true then
-  tempurl_toggle = true
-  pipeline = "tempurl swauth"
+if pipeline.include?("swauth")
+   account_management = true
+else
+   account_management = false
 end
 
 -%>
@@ -55,7 +60,7 @@ log_statsd_metric_prefix = <%= node[:swift][:statistics][:statsd_prefix] %>.<%= 
 
 
 [pipeline:main]
-pipeline = catch_errors healthcheck cache ratelimit <%= pipeline %> proxy-logging proxy-server
+pipeline = catch_errors healthcheck cache ratelimit <%= pipeline.join(" ") %> proxy-logging proxy-server
 
 [app:proxy-server]
 use = egg:swift#proxy
@@ -92,28 +97,24 @@ use = egg:swift#proxy
 # account_autocreate = false
 allow_account_management = <%= account_management %>
 
-<% if @authmode == "keystone" -%>
+<% if pipeline.include?("keystone") -%>
 account_autocreate = true
 <% end %>
 
-<% if @authmode == "swauth" -%>
+<% if pipeline.include?("swauth") -%>
 [filter:swauth]
 use = egg:swauth#swauth
 # set log_name = swauth
 # super_admin_key = <secret_key>
 ######
-<% if account_management -%>
 super_admin_key = <%= @authkey %>
 default_swift_cluster = local#<%= node[:swift][:swift_url] %>#<%= node[:swift][:swauth_url] %>
-<% else %>
-default_swift_cluster = local#<%= node[:swift][:swift_url] %>
-<% end %>
-<% if tempurl_toggle -%>
+<% if pipeline.include?("tempurl") -%>
 allow_overrides = true
-<% end %>
 <% end %>
 <% if node["swift"]["container-server"]["allowed_sync_hosts"] -%>
 allowed_sync_hosts = <%= node["swift"]["container-server"]["allowed_sync_hosts"].join(",") %>
+<% end %>
 <% end %>
 
 [filter:healthcheck]
@@ -174,13 +175,13 @@ use = egg:swift#ratelimit
 [filter:domain_remap]
 use = egg:swift#domain_remap
 # You can override the default log routing for this filter here:
-# set log_name = domain_remap
-# set log_facility = LOG_LOCAL0
-# set log_level = INFO
-# set log_headers = False
-# storage_domain = example.com
-# path_root = v1
-# reseller_prefixes = AUTH
+set log_name = <%= node[:swift]["domain_remap"]["log_name"] %>
+set log_facility = <%= node[:swift]["domain_remap"]["log_facility"] %>
+set log_level = <%= node[:swift]["domain_remap"]["log_level"] %>
+set log_headers = <%= node[:swift]["domain_remap"]["log_headers"] %>
+storage_domain = <%= node[:swift]["domain_remap"]["storage_domain"] %>
+path_root = <%= node[:swift]["domain_remap"]["path_root"] %>
+reseller_prefixes = <%= node[:swift]["domain_remap"]["reseller_prefixes"] %>
 
 [filter:catch_errors]
 use = egg:swift#catch_errors

@@ -162,6 +162,30 @@ default["swift"]["disk_test_filter"] = [ "candidate =~ /(sd|hd|xvd|vd)(?!a$)[a-z
 # override in a wrapper to enable tempurl with swauth
 default["swift"]["tempurl"]["enabled"] = false
 
+# whether or not to enable domain remap in the swift proxy
+default["swift"]["domain_remap"]["enabled"] = false
+
+# enable domain log name
+default["swift"]["domain_remap"]["log_name"] = "domain_remap"
+
+# domain remap log facilty
+default["swift"]["domain_remap"]["log_facility"] = "LOG_LOCAL0"
+
+# domain remap log level
+default["swift"]["domain_remap"]["log_level"] = "INFO"
+
+# domain remap log headers
+default["swift"]["domain_remap"]["log_headers"] = "False"
+
+# domain remap reseller domain
+default["swift"]["domain_remap"]["storage_domain"] = "example.com"
+
+# domain remap root path
+default["swift"]["domain_remap"]["path_root"] = "v1"
+
+# domain remap reseller prefixes
+default["swift"]["domain_remap"]["reseller_prefixes"] = "AUTH"
+
 # container-server
 
 # Override this with an allowed list of your various swift clusters if you wish

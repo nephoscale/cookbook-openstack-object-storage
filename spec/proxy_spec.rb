@@ -12,6 +12,7 @@ describe 'openstack-object-storage::proxy-server' do
       swift_stubs
       @chef_run = ::ChefSpec::Runner.new ::UBUNTU_OPTS
       @node = @chef_run.node
+      @node.set['cpu']['total'] = 6
       @node.set['lsb']['code'] = 'precise'
       @node.set['swift']['authmode'] = 'swauth'
       @node.set['swift']['platform']['swauth_packages'] = ['swauth']
@@ -52,8 +53,34 @@ describe 'openstack-object-storage::proxy-server' do
         expect(sprintf("%o", @file.mode)).to eq "600"
       end
 
-      it "template contents" do
-        pending "TODO: implement"
+      it "has proper pipeline in template" do
+        array = [
+        /^pipeline = catch_errors healthcheck cache ratelimit swauth proxy-logging proxy-server$/,
+        /^workers = 5$/,
+        ]
+        array.each do |content|
+          expect(@chef_run).to render_file(@file.name).with_content(content)
+        end
+      end
+
+    end
+
+    describe "/etc/swift/proxy-server.conf with domain_remap enabled" do
+
+      before do
+        @node = @chef_run.node
+        @node.set["swift"]["domain_remap"]["enabled"] = true
+        @chef_run.converge "openstack-object-storage::proxy-server"
+        @file = @chef_run.template "/etc/swift/proxy-server.conf"
+      end
+
+      it "has proper pipeline in template" do
+        array = [
+          /^pipeline = catch_errors healthcheck cache ratelimit swauth domain_remap proxy-logging proxy-server$/
+       ]
+       array.each do |content|
+          expect(@chef_run).to render_file(@file.name).with_content(content)
+        end
       end
 
     end
