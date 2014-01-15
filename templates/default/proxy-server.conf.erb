@@ -10,10 +10,6 @@ if node[:swift][:domain_remap][:enabled]
   pipeline << "domain_remap"
 end
 
-if node[:swift][:staticweb][:enabled]
-  pipeline << "staticweb"
-end
-
 case @authmode
 when "keystone"
   pipeline << "authtoken"
@@ -22,6 +18,9 @@ when "swauth"
   pipeline << "swauth"
 end
 
+if node[:swift][:staticweb][:enabled]
+  pipeline << "staticweb"
+end
 
 if pipeline.include?("swauth")
    account_management = true
