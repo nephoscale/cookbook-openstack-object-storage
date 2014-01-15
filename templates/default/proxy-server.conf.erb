@@ -6,6 +6,10 @@ if (node[:swift][:authmode] == "swauth" and node[:swift][:tempurl][:enabled] == 
   pipeline << "tempurl"
 end
 
+if node[:swift][:domain_remap][:enabled]
+  pipeline << "domain_remap"
+end
+
 case @authmode
 when "keystone"
   pipeline << "authtoken"
@@ -14,9 +18,6 @@ when "swauth"
   pipeline << "swauth"
 end
 
-if node[:swift][:domain_remap][:enabled]
-  pipeline << "domain_remap"
-end
 
 if pipeline.include?("swauth")
    account_management = true
