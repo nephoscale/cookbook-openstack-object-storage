@@ -11,7 +11,7 @@ if node[:swift][:domain_remap][:enabled]
 end
 
 if node[:swift][:staticweb][:enabled]
-  pipeline << "domain_remap"
+  pipeline << "staticweb"
 end
 
 case @authmode
