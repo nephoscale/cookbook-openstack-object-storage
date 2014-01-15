@@ -186,6 +186,17 @@ default["swift"]["domain_remap"]["path_root"] = "v1"
 # domain remap reseller prefixes
 default["swift"]["domain_remap"]["reseller_prefixes"] = "AUTH"
 
+# whether or not to enable staticweb in the swift proxy
+default["swift"]["staticweb"]["enabled"] = false
+
+# staticweb logging options
+default["swift"]["staticweb"]["log_facility"] = "LOG_LOCAL0"
+default["swift"]["staticweb"]["log_level"] = "INFO"
+default["swift"]["staticweb"]["access_log_name"] = "staticweb"
+default["swift"]["staticweb"]["access_log_facility"] = "LOG_LOCAL0"
+default["swift"]["staticweb"]["access_log_level"] = "INFO"
+default["swift"]["staticweb"]["log_headers"] = "False"
+
 # container-server
 
 # Override this with an allowed list of your various swift clusters if you wish
