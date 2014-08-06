@@ -57,13 +57,17 @@ In really really huge environments, it's possible that the storage
 node will be split into swift-{container,accout}-server nodes and
 swift-object-server nodes.
 
+Recipes
+=======
+
+client
+----
+- Install the swift client packages
 
 Attributes
 ==========
 
  * ```default[:swift][:authmode]``` - "swauth" or "keystone" (default "swauth"). Right now, only swauth is supported (defaults to swauth)
-
- * ```default[:swift][:tempurl]``` - "true" or "false". Adds tempurl to the pipeline and sets allow_overrides to true when using swauth
 
  * ```default[:swift][:swauth_source]``` - "git" or "package"(default). Selects between installing python-swauth from git or system package
 
@@ -153,6 +157,38 @@ on storage nodes:
  * ```default[:swift][:network][:object-cidr]``` - the CIDR network for your object
    servers in order to build the ring (defaults to 10.0.0.0/24)
 
+Proxy Plugins
+=============
+
+Formpost
+-------
+
+ * ```default[:swift][:formpost][:enabled]``` - optionally enable the formpost proxy plugin (defaults to false)
+
+TempURL
+-------
+
+ * ```default[:swift][:tempurl][:enabled]``` - optionally enable the tempurl proxy plugin (defaults to false)
+ * ```default[:swift][:tempurl][:incoming_remove_headers]``` - The headers to remove from incoming requests (defaults to x-timestamp)
+ * ```default[:swift][:tempurl][:incoming_allow_headers]``` - The headers allowed as exceptions to incoming_remove_headers (defaults to empty string)
+ * ```default[:swift][:tempurl][:incoming_allow_headers]``` - The headers allowed as exceptions to incoming_remove_headers (defaults to empty string)
+ * ```default[:swift][:tempurl][:outgoing_remove_headers]``` - The headers to remove from outgoing responses (defaults to x-object-meta-*)
+ * ```default[:swift][:tempurl][:outgoing_allow_headers]``` - The headers allowed as exceptions to outgoing_remove_headers (defaults x-object-meta-public-*)
+
+Domain Remap
+------------
+
+ * ```default[:swift][:domain_remap][:enabled]``` - optionally enable the domain remap proxy plugin (defaults to false)
+ * ```default[:swift][:domain_remap][:storage_domain]``` - The domain remap reseller domain (defaults to example.com)
+ * ```default[:swift][:domain_remap][:root_path]``` - The domain remap root path (defaults to v1)
+ * ```default[:swift][:domain_remap][:reseller_prefixes]``` - The domain remap reseller prefixes (defaults to AUTH)
+
+Staticweb
+----------
+
+ * ```default[:swift][:staticweb][:enabled]``` - optionally enable the staticweb proxy plugin (defaults to false)
+ * ```default[:swift][:staticweb][:cache_timeout]``` - Seconds to cache container x-container-meta-web-* header values (defaults to 300)
+
 Examples
 ========
 
@@ -239,6 +275,16 @@ Testing
 
 Please refer to the [TESTING.md](TESTING.md) for instructions for testing the cookbook.
 
+Berkshelf
+=====
+
+Berks will resolve version requirements and dependencies on first run and
+store these in Berksfile.lock. If new cookbooks become available you can run
+`berks update` to update the references in Berksfile.lock. Berksfile.lock will
+be included in stable branches to provide a known good set of dependencies.
+Berksfile.lock will not be included in development branches to encourage
+development against the latest cookbooks.
+
 License and Author
 ==================
 
@@ -249,6 +295,7 @@ License and Author
 | **Author**           |  Ron Pedde (<ron.pedde@rackspace.com>)             |
 | **Author**           |  Will Kelly (<will.kelly@rackspace.com>)           |
 | **Author**           |  Chen Zhiwei (<zhiwchen@cn.ibm.com>)               |
+| **Author**           |  Mark Vanderwiel (<vanderwl@us.ibm.com>)           |
 |                      |                                                    |
 | **Copyright**        |  Copyright (c) 2013, AT&T, Inc.                    |
 | **Copyright**        |  Copyright (c) 2012, Rackspace US, Inc.            |

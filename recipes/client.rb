@@ -1,9 +1,9 @@
 # encoding: UTF-8
 #
 # Cookbook Name:: openstack-object-storage
-# Recipe:: memcached
+# Recipe:: client
 #
-# Copyright 2012, Rackspace US, Inc.
+# Copyright 2014, IBM Corp.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,4 +18,11 @@
 # limitations under the License.
 #
 
-include_recipe 'memcached'
+platform_options = node['swift']['platform']
+platform_options['swift_client_packages'].each do |pkg|
+  package pkg do
+    options platform_options['package_overrides']
+
+    action :upgrade
+  end
+end
