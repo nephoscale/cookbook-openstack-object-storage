@@ -116,6 +116,7 @@ else
      next if not proxy_ip # skip nil ips so we dont break the config
      server_str = "#{proxy_ip}:11211"
      memcache_servers << server_str unless memcache_servers.include?(server_str)
+     memcache_servers.sort!
   end
 end
 
