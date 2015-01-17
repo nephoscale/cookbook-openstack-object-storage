@@ -108,7 +108,6 @@ end
 if Chef::Config[:solo]
   memcache_servers = ['127.0.0.1:11211']
 else
-<<<<<<< HEAD
    memcache_servers = []
    proxy_role = node["swift"]["proxy_server_chef_role"]
    proxy_nodes = search(:node, "chef_environment:#{node.chef_environment} AND roles:#{proxy_role}")
