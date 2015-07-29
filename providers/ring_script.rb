@@ -277,10 +277,10 @@ action :ensure_exists do
       mode new_resource.mode
       content s
     end
+    script_file.run_action(:create)
+    new_resource.updated_by_last_action(must_update)
   rescue Chef::Exceptions::NoMethodError => e
     Chef::Log.warn("Failed to create file #{new_resource.name}")
   end
 
-  script_file.run_action(:create)
-  new_resource.updated_by_last_action(must_update)
 end
