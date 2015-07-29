@@ -55,11 +55,15 @@ action :ensure_exists do
   end
 
   # make sure we have a "path"
-  Directory(path) do
-    group 'swift'
-    owner 'swift'
-    recursive true
-  end.run_action(:create)
+  begin
+    Directory(path) do
+      group 'swift'
+      owner 'swift'
+      recursive true
+    end.run_action(:create)
+  rescue Chef::Exceptions::NoMethodError => e
+    Chef::Log.warn("Failed to create directory for path #{path}")
+  end
 
   # find what should be mounted, and what IS mounted
   mounts=node["filesystem"].inject({}) { |hsh, (k,v)| hsh.merge(v["mount"] => k) }
