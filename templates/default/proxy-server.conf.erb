@@ -131,6 +131,7 @@ admin_tenant_name = <%= node['openstack']['object-storage']['service_tenant_name
 admin_user = <%= node['openstack']['object-storage']['service_user'] %>
 admin_password = <%= @service_pass %>
 signing_dir = <%= node['openstack']['object-storage']['api']['auth']['cache_dir'] %>
+insecure = True
 
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
