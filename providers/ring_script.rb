@@ -151,7 +151,7 @@ def generate_script # rubocop:disable Metrics/AbcSize
       disk_data[which][ip].keys.sort.each do |uuid|
         v = disk_data[which][ip][uuid]
         if new_disks[which].key?(v['mountpoint'])
-          s << "swift-ring-builder #{ring_path}/#{which}.builder add r#{v['region']}z#{v['zone']}-#{v['ip']}:#{ports[which]}/#{v['device']} #{v['size']}\n"
+          s << "swift-ring-builder #{ring_path}/#{which}.builder add r#{v['region']}z#{v['zone']}-#{v['ip']}:#{ports[which]}/#{v['uuid']} #{v['size']}\n"
           must_rebalance = true
         end
       end
