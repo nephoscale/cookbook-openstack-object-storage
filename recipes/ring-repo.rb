@@ -160,6 +160,7 @@ bash 'rebuild-rings' do
 end
 
 openstack_object_storage_ring_script '/etc/swift/ring-workspace/generate-rings.sh' do
+  ignore_failure true
   owner node['openstack']['object-storage']['user']
   group node['openstack']['object-storage']['group']
   mode 00700
