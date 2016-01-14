@@ -132,6 +132,7 @@ admin_user = <%= node['openstack']['object-storage']['service_user'] %>
 admin_password = <%= @service_pass %>
 signing_dir = <%= node['openstack']['object-storage']['api']['auth']['cache_dir'] %>
 insecure = True
+delay_auth_decision = True
 
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
