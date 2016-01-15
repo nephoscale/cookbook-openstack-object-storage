@@ -55,7 +55,7 @@ pipeline = catch_errors healthcheck cache ratelimit <%= pipeline.join(' ') %> pr
 
 [app:proxy-server]
 use = egg:swift#proxy
-allow_account_management = <%= account_management %>
+allow_account_management = true
 node_timeout = <%= node['openstack']['object-storage']['proxy-server']['node_timeout'] %>
 <% if pipeline.include?('keystoneauth') -%>
 account_autocreate = true
