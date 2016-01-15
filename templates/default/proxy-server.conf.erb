@@ -136,7 +136,9 @@ delay_auth_decision = True
 
 [filter:keystoneauth]
 use = egg:swift#keystoneauth
-operator_roles = admin, swiftoperator
+# operator_roles = admin, swiftoperator
+# instead we give it to everyone
+operator_roles = admin, _member_
 <% end %>
 
 [filter:proxy-logging]
