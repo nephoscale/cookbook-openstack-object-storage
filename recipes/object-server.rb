@@ -42,7 +42,8 @@ end
 
 svc_names.values.each do |svc|
   service svc do
-    supports status: false, restart: true
+    provider Chef::Provider::Service::Upstart
+    supports status: true, restart: true
     action [:enable, :start]
     only_if '[ -e /etc/swift/object-server.conf ] && [ -e /etc/swift/object.ring.gz ]'
   end

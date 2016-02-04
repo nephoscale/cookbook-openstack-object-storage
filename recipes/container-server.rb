@@ -42,6 +42,7 @@ end
 
 svc_names.values.each do |svc|
   service svc do
+    provider Chef::Provider::Service::Upstart
     supports status: true, restart: true
     action [:enable, :start]
     only_if '[ -e /etc/swift/container-server.conf ] && [ -e /etc/swift/container.ring.gz ]'
