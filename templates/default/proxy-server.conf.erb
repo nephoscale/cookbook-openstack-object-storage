@@ -83,9 +83,9 @@ use = egg:swift#container_sync
 # coming in, but won't change any existing values already in the cluster.
 # Updating those will have to be done manually, as knowing what the true realm
 # endpoint should be cannot always be guessed.
-allow_full_urls = true
+# allow_full_urls = true
 # Set this to specify this clusters //realm/cluster as "current" in /info
-current = //REALM/CLUSTER
+# current = //REALM/CLUSTER
 
 # Note: Put before both ratelimit and auth in the pipeline.
 [filter:bulk]
