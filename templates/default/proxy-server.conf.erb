@@ -6,16 +6,8 @@ pipeline = []
 # the pipeline ordering is important and certain inclusions
 # must either preceed or follow the selected auth module
 
-if (node['openstack']['object-storage']['authmode'] == 'swauth' and node['openstack']['object-storage']['tempurl']['enabled'] == true)
-  pipeline << 'tempurl'
-end
-
 if node['openstack']['object-storage']['domain_remap']['enabled']
   pipeline << 'domain_remap'
-end
-
-if node['openstack']['object-storage']['formpost']['enabled']
-  pipeline << 'formpost'
 end
 
 case @authmode
@@ -51,7 +43,7 @@ log_statsd_metric_prefix = <%= node['openstack']['object-storage']['statistics']
 <% end %>
 
 [pipeline:main]
-pipeline = catch_errors healthcheck cache ratelimit <%= pipeline.join(' ') %> proxy-logging proxy-server
+pipeline = catch_errors crossdomain healthcheck cache container_sync bulk tempurl ratelimit formpost <%= pipeline.join(' ') %> container-quotas account-quotas slo dlo versioned_writes proxy-logging proxy-server
 
 [app:proxy-server]
 use = egg:swift#proxy
@@ -74,12 +66,47 @@ allowed_sync_hosts = <%= node['openstack']['object-storage']['container-server']
 <% end %>
 <% end %>
 
+[filter:crossdomain]
+use = egg:swift#crossdomain
+
 [filter:healthcheck]
 use = egg:swift#healthcheck
 
 [filter:cache]
 use = egg:swift#memcache
 memcache_servers = <%= @memcache_servers %>
+
+[filter:container_sync]
+use = egg:swift#container_sync
+# Set this to false if you want to disallow any full url values to be set for
+# any new X-Container-Sync-To headers. This will keep any new full urls from
+# coming in, but won't change any existing values already in the cluster.
+# Updating those will have to be done manually, as knowing what the true realm
+# endpoint should be cannot always be guessed.
+allow_full_urls = true
+# Set this to specify this clusters //realm/cluster as "current" in /info
+current = //REALM/CLUSTER
+
+# Note: Put before both ratelimit and auth in the pipeline.
+[filter:bulk]
+use = egg:swift#bulk
+# max_containers_per_extraction = 10000
+# max_failed_extractions = 1000
+# max_deletes_per_request = 10000
+# max_failed_deletes = 1000
+#
+# In order to keep a connection active during a potentially long bulk request,
+# Swift may return whitespace prepended to the actual response body. This
+# whitespace will be yielded no more than every yield_frequency seconds.
+# yield_frequency = 10
+#
+# Note: The following parameter is used during a bulk delete of objects and
+# their container. This would frequently fail because it is very likely
+# that all replicated objects have not been deleted by the time the middleware got a
+# successful response. It can be configured the number of retries. And the
+# number of seconds to wait between each retry will be 1.5**retry
+#
+# delete_container_retry_count = 0
 
 [filter:ratelimit]
 use = egg:swift#ratelimit
@@ -111,13 +138,77 @@ set access_log_facility = <%= node['openstack']['object-storage']['staticweb']['
 set access_log_level = <%= node['openstack']['object-storage']['staticweb']['access_log_level'] %>
 set log_headers = <%= node['openstack']['object-storage']['staticweb']['log_headers'] %>
 
+# Note: Put after auth in the pipeline.
+[filter:container-quotas]
+use = egg:swift#container_quotas
+
+# Note: Put after auth in the pipeline.
+[filter:account-quotas]
+use = egg:swift#account_quotas
+
+# Note: Put after auth and staticweb in the pipeline.
+[filter:slo]
+use = egg:swift#slo
+max_manifest_segments = 1000
+# max_manifest_size = 2097152
+# min_segment_size = 1048576
+# Start rate-limiting SLO segment serving after the Nth segment of a
+# segmented object.
+# rate_limit_after_segment = 10
+#
+# Once segment rate-limiting kicks in for an object, limit segments served
+# to N per second. 0 means no rate-limiting.
+# rate_limit_segments_per_sec = 0
+#
+# Time limit on GET requests (seconds)
+# max_get_time = 86400
+
+# Note: Put after auth and staticweb in the pipeline.
+# If you don't put it in the pipeline, it will be inserted for you.
+[filter:dlo]
+use = egg:swift#dlo
+# Start rate-limiting DLO segment serving after the Nth segment of a
+# segmented object.
+# rate_limit_after_segment = 10
+#
+# Once segment rate-limiting kicks in for an object, limit segments served
+# to N per second. 0 means no rate-limiting.
+# rate_limit_segments_per_sec = 1
+#
+# Time limit on GET requests (seconds)
+# max_get_time = 86400
+#
+
+# Note: Put tempurl before dlo, slo and your auth filter(s) in the pipeline
 [filter:tempurl]
 use = egg:swift#tempurl
+# The methods allowed with Temp URLs.
+# methods = GET HEAD PUT POST DELETE
+#
+# The headers to remove from incoming requests. Simply a whitespace delimited
+# list of header names and names can optionally end with '*' to indicate a
+# prefix match. incoming_allow_headers is a list of exceptions to these
+# removals.
 incoming_remove_headers = <%= node['openstack']['object-storage']['tempurl']['incoming_remove_headers'] %>
+#
+# The headers allowed as exceptions to incoming_remove_headers. Simply a
+# whitespace delimited list of header names and names can optionally end with
+# '*' to indicate a prefix match.
 incoming_allow_headers = <%= node['openstack']['object-storage']['tempurl']['incoming_allow_headers'] %>
+#
+# The headers to remove from outgoing responses. Simply a whitespace delimited
+# list of header names and names can optionally end with '*' to indicate a
+# prefix match. outgoing_allow_headers is a list of exceptions to these
+# removals.
+# outgoing_remove_headers = x-object-meta-*
 outgoing_remove_headers = <%= node['openstack']['object-storage']['tempurl']['outgoing_remove_headers'] %>
+#
+# The headers allowed as exceptions to outgoing_remove_headers. Simply a
+# whitespace delimited list of header names and names can optionally end with
+# '*' to indicate a prefix match.
 outgoing_allow_headers = <%= node['openstack']['object-storage']['tempurl']['outgoing_allow_headers'] %>
 
+# Note: Put formpost just before your auth filter(s) in the pipeline
 [filter:formpost]
 use = egg:swift#formpost
 
@@ -140,6 +231,17 @@ use = egg:swift#keystoneauth
 # instead we give it to everyone
 operator_roles = admin, _member_
 <% end %>
+
+# Note: Put after slo, dlo in the pipeline.
+# If you don't put it in the pipeline, it will be inserted automatically.
+[filter:versioned_writes]
+use = egg:swift#versioned_writes
+# Enables using versioned writes middleware and exposing configuration
+# settings via HTTP GET /info.
+# WARNING: Setting this option bypasses the "allow_versions" option
+# in the container configuration file, which will be eventually
+# deprecated. See documentation for more details.
+allow_versioned_writes = true
 
 [filter:proxy-logging]
 use = egg:swift#proxy_logging

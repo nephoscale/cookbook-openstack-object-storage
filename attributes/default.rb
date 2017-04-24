@@ -322,11 +322,11 @@ default['openstack']['object-storage']['proxy-server']['max_clients'] = 1024
 # Request timeout to external services. The default is 10 seconds.
 default['openstack']['object-storage']['proxy-server']['node_timeout'] = 10
 
-# enable or disable formpost
-default['openstack']['object-storage']['formpost']['enabled'] = false
+# enable or disable formpost [ must be always enabled, see Ticket #206765 ]
+default['openstack']['object-storage']['formpost']['enabled'] = true
 
-# enable or disable tempurl
-default['openstack']['object-storage']['tempurl']['enabled'] = false
+# enable or disable tempurl [ must be always enabled, see Ticket #206765 ]
+default['openstack']['object-storage']['tempurl']['enabled'] = true
 
 # The headers to remove from incoming requests. Simply a whitespace delimited
 # list of header names and names can optionally end with '*' to indicate a
@@ -374,8 +374,8 @@ default['openstack']['object-storage']['domain_remap']['path_root'] = 'v1'
 # domain remap reseller prefixes
 default['openstack']['object-storage']['domain_remap']['reseller_prefixes'] = 'AUTH'
 
-# whether or not to enable staticweb in the swift proxy
-default['openstack']['object-storage']['staticweb']['enabled'] = false
+# whether or not to enable staticweb in the swift proxy [ must be always enabled, see Ticket #206765 ]
+default['openstack']['object-storage']['staticweb']['enabled'] = true
 
 # Seconds to cache container x-container-meta-web-* header values.
 default['openstack']['object-storage']['staticweb']['cache_timeout'] = 300
