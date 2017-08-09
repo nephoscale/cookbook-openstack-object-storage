@@ -278,6 +278,7 @@ default['openstack']['object-storage']['disk_test_filter'] = [
   'candidate =~ /(sd|hd|xvd|vd)(?!a$)[a-z]+/',
   "File.exist?('/dev/' + candidate)",
   "not system('/sbin/parted /dev/' + candidate + ' -s print | grep linux-swap')",
+  "not system('/sbin/blkid -s LABEL /dev/' + candidate + ' | grep cidata')",
   "not info.has_key?('removable') or info['removable'] == 0.to_s"]
 
 #-------------------

@@ -11,6 +11,7 @@ describe 'openstack-object-storage::object-server' do
         'candidate =~ /sd[^a]/ or candidate =~ /hd[^a]/ or candidate =~ /vd[^a]/ or candidate =~ /xvd[^a]/',
         "File.exist?('/dev/' + candidate)",
         "not system('/sbin/parted /dev/' + candidate + ' -s print | grep linux-swap')",
+        "not system('/sbin/blkid -s LABEL /dev/' + candidate + ' | grep cidata')",
         "not info.has_key?('removable') or info['removable'] == 0.to_s"]
       # mock out an interface on the storage node
       node.set['network'] = MOCK_NODE_NETWORK_DATA['network']
