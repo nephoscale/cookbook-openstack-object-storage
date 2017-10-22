@@ -81,6 +81,15 @@ when 'keystone'
   package 'python-keystoneclient' do
     action :upgrade
   end
+
+  # DO-101
+  # we should use keystonemiddleware with keystone v3
+  if node['openstack']['api']['auth']['version'] == 'v3.0'
+    package 'python-keystonemiddleware' do
+      action :upgrade
+    end
+  end
+  #
   identity_endpoint = internal_endpoint 'identity-internal'
   identity_admin_endpoint = admin_endpoint 'identity-admin'
   service_pass = get_password 'service', 'openstack-object-storage'

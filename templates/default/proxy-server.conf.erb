@@ -174,13 +174,26 @@ use = egg:swift#formpost
 
 <% if pipeline.include?('authtoken') -%>
 [filter:authtoken]
-paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
 auth_uri = <%= @auth_uri %>
+auth_version = <%= node["openstack"]["object-storage"]["api"]["auth"]["version"] %>
+<% if node['openstack']['api']['auth']['version'] == 'v3.0' %>
+# DO-101
+auth_url = <%= @identity_uri %>
+auth_plugin = password
+username = <%= node["openstack"]["object-storage"]["service_user"] %>
+password = <%= @service_pass %>
+project_name = <%= node["openstack"]["object-storage"]["service_tenant_name"] %>
+user_domain_name = Default
+project_domain_name = Default
+paste.filter_factory = keystonemiddleware.auth_token:filter_factory
+<% else %>
 identity_uri = <%= @identity_uri %>
-auth_version = <%= node['openstack']['object-storage']['api']['auth']['version'] %>
-admin_tenant_name = <%= node['openstack']['object-storage']['service_tenant_name'] %>
-admin_user = <%= node['openstack']['object-storage']['service_user'] %>
+admin_tenant_name = <%= node["openstack"]["object-storage"]["service_tenant_name"] %>
+admin_user = <%= node["openstack"]["object-storage"]["service_user"] %>
 admin_password = <%= @service_pass %>
+paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
+<% end %>
+
 signing_dir = <%= node['openstack']['object-storage']['api']['auth']['cache_dir'] %>
 insecure = True
 delay_auth_decision = True
